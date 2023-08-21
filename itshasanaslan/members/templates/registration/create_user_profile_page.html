@@ -1,0 +1,29 @@
+{%extends 'base.html' %}
+
+{%block title%}
+    Add Profile
+{%endblock%}
+
+
+{%block content%}
+    {% if user.is_authenticated%}
+
+    <h1>
+        Add Profile
+    </h1>
+
+    <br><br>
+    <div class="form-control">
+        <form id="form_model" method="POST" enctype="multipart/form-data">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button type="submit" class="btn btn-secondary" id="btn_submit">Create</button>
+        </form>
+    </div>
+    
+    {%else%}
+    <h1 style="color: red;"> You are not allowed here!</h1>
+    {%endif%}
+
+
+{%endblock%}

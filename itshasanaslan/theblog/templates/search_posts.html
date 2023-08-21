@@ -1,0 +1,56 @@
+{%extends 'base.html'%}
+{% load static %}
+{%block title%}Homepage {%endblock%}
+{%block content%}
+<center>
+
+{%if searched%}
+
+<h1>{{total}} articles found for '{{searched}}'</h1>
+</center>
+<h1>Articles</h1>
+<br>
+<hr>
+<ul>
+{%for i in posts%}
+
+
+<li> 
+	   {% if i.author.profile%}
+	  <a href="{% url 'show_profile_page' i.author.profile.id %}" style="text-decoration:none;">
+	  	   <img src="{{i.author.profile.profile_pic.url}}" width="50" height="50" class="rounded-circle">
+	  </a>
+
+   {%else%}
+   <img src="{%static 'theblog/images/default_profile.png' %}" width="50" height="50" class="rounded-circle">
+
+   {%endif%}
+   {%  if i.author.profile%}
+   <i>
+   	<a href="{% url 'show_profile_page' i.author.profile.id %}" style="text-decoration: none; color: black;">{{i.author.first_name}} {{i.author.last_name}} </a>
+   </i>
+   {% else %}
+
+    <i>{{i.author.first_name}} {{i.author.last_name}}
+    	   {% endif %}
+        {% if i.author.is_superuser%}<span style="color: red;">(moderator)</span>
+        {% endif %}
+        - <i>{{i.post_date}}</i></i> - <a href="{% url 'category' i.category|slugify %}"><i style="color:green">[{{i.category}}]</i></a>
+        <br>
+</li>
+    <h3><a href="{% url 'article-detail' i.pk %}" style="text-decoration: none;">{{i.title}}</a></h3> 
+    {{i.body|slice:"200"|safe}}
+    <i><a href="{% url 'article-detail' i.pk %}">...read more...</a></i> <br>
+
+<br>
+<hr>
+
+{%endfor%}
+</ul>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+{%else%}
+<center>Pass a parameter</center>
+{%endif%}
+
+
+{%endblock%}

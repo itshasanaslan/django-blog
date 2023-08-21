@@ -1,0 +1,29 @@
+{%extends 'base.html' %}
+
+{%block title%}
+    Add Category
+{%endblock%}
+
+
+{%block content%}
+    {% if user.is_authenticated%}
+
+    <h1>
+        Add Blog Category
+    </h1>
+
+    <br><br>
+    <div class="form-control">
+        <form method="POST">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button class="btn btn-secondary">Add</button>
+        </form>
+    </div>
+    {%else%}
+    <h1 style="color: red;"> You are not allowed here!</h1>
+    {%endif%}
+    {% for i in '0123456789asssasa32382'|make_list %}
+    <br/>      
+{% endfor %}
+{%endblock%}

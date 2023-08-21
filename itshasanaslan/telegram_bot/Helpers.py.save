@@ -1,0 +1,457 @@
+from __future__ import print_function
+import requests
+import pickle
+import os
+import json
+import platform
+import sqlite3
+from httplib2 import Http
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.http import MediaFileUpload
+from mimetypes import MimeTypes
+from datetime import datetime
+from colorama import Fore,Style, init
+from random import choice
+
+init()
+temp = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.RED, Fore.YELLOW, Fore.MAGENTA, Fore.LIGHTWHITE_EX, Fore.LIGHTRED_EX]
+COLORS = []
+for i in temp:
+	COLORS.append(i + Style.BRIGHT)
+del temp
+TAKEN_COLORS = []
+
+
+
+class TelegramControl:
+	def __init__(self, token, drive_api):
+		print("Telegram class init")
+		self.drive_api = drive_api
+		self.token = token
+		self.main_dir = "/var/www/itshasanaslan/telegram_bot"
+		self.data_folder =  os.path.join(self.main_dir, "Files")
+		self.CLEAR_CODE = False
+		self.admin_id = "1151272453"
+		self.current_chat = None
+		self.users_and_colors = {}
+		self.commands = {
+			"download" : "/drive",
+			"get_urls":"/url",
+			"poll_senders":"/skor"
+		}
+		self.help_commands = {
+		"/drive" : "Drive'a dosya yükler. Bir dosya mesajını alıntıla ve şöyle yaz: /drive klasöradı",
+		"/url" :  "Drive klasöründen dosyaları ve linklerini getirir. Kullanımı: /url klasöradı"
+		"/skor"	 : "Gönderilen soru sayılarını görüntüle"
+}
+	
+	def clear_console(self, text, sender):
+		sender = str(sender)
+		if not self.CLEAR_CODE:
+			if platform.system() == 'Linux':
+				self.CLEAR_CODE = "clear"
+			elif platform.system() == 'windows' or platform.system() == 'Windows' or 'windows' in platform.system():
+				self.CLEAR_CODE = "cls"
+				os.system('title Promosyon')
+				
+		if text == "/clear" and sender ==  self.admin_id :os.system(self.CLEAR_CODE)
+		
+	def console_interface(self, update):
+		current_time = datetime.now()
+		current_time = current_time.strftime("%H:%M:%S")
+		self.print_sender(update)
+		print(f"{self.get_color(update.message.from_user.id)}[{current_time}]  {self.get_owner_value(update)}: {update.message.text}{Fore.WHITE}")
+		self.clear_console(update.message.text, update.message.from_user.id)
+		self.command_manager(update)
+		
+	def print_sender(self, update):
+		chat_title = None
+	
+		if update.message.chat.type  in ['group', 'supergroup']:
+			chat_title = update.message.chat.title
+		elif update.message.chat.type == 'private':
+			chat_title = self.get_owner_value(update)
+			
+
+		if self.current_chat != chat_title:
+			if self.current_chat == None:
+				self.current_chat = chat_title
+			
+			self.current_chat = chat_title
+			print("\nNEW CHAT from ", end = " ")
+			print(f"[{self.current_chat}]")
+
+	# where check download and stuff
+	def manage_reply(self, update, context):
+		print(f"\nReplying to {self.get_owner_value(update, username=True)}'s message: [{update.message.reply_to_message.text}]")
+		document = update.message.reply_to_message.document
+		commands = update.message.text.split()
+		if document:
+			print("requested document")
+			if commands[0] == self.commands['download']:
+				if len(commands) == 1:
+					update.message.reply_text(f"Hatalı kullanım. Mesajı alıntılayıp '{self.commands['download']} klasöradı' şeklinde girin.")
+				else:
+					print("Downloading file") 
+					download_response = self.manage_download(document)
+					if download_response['success']:
+						print("Uploading", download_response['message'],f"to {commands[1]} \n\n")
+						upload_result = self.drive_api.FileUpload(download_response['message'], commands[1])                    
+
+						update.message.reply_text(upload_result['message'])
+	
+	def get_owner_value(self, update, username=False):
+		msg = ""
+		context = None
+		
+
+		if update.message.chat.type  in ['group', 'supergroup']:
+			context = update.message.from_user
+
+		elif update.message.chat.type == 'private':
+			context = update.message.chat
+
+		else:
+			return "Couldn't resolve chat type: " + str(update.message.chat.type)
+
+
+		if username and context.username:
+			msg = f"@{context.username} "
+
+		if context.first_name:
+			msg += context.first_name + " "
+
+		if context.last_name:
+			msg += context.last_name  + " "
+
+		return msg
+
+	def get_color(self, user_id):
+		if user_id not in self.users_and_colors:
+			allow = False
+			while True:
+				random_color = choice(COLORS)
+				if random_color in TAKEN_COLORS:
+					if len(TAKEN_COLORS >= COLORS):
+						allow = True
+					else:
+						continue
+				else:
+					allow = True
+					if random_color not in TAKEN_COLORS:
+						TAKEN_COLORS.append(random_color)
+				if allow:					
+					self.users_and_colors[user_id] = random_color
+					break
+		return self.users_and_colors[user_id]
+
+	def command_manager(self, update):
+		commands = update.message.text.split()
+		if commands[0] == self.commands['get_urls']:
+			if len(commands) == 1:
+				update.message.reply_text(f"Hatalı kullanım. Doğrusu {self.commands['get_urls']} klasöradı")
+			if len(commands) > 1:
+				urls = self.drive_api.get_urls(commands[1])
+				update.message.reply_text(urls
+
+###############################################################################################
+	#DRIVE API RELATED.
+	# dont call from outside
+	def get_file_path(self, file_id):
+		post_url = f"https://api.telegram.org/bot{self.token}/getFile?file_id={file_id}"
+		result = requests.post(post_url)
+		data = result.json()
+		if not data['ok']:
+			return False
+		print(data)
+		return data["result"]["file_path"]
+
+	# dont  call from outs,de
+	def download_file(self,filename, file_id = None, file_path = None):
+		if not file_id and not file_path:return None
+
+		if file_id:
+			file_path = self.get_file_path(file_id)
+			if not file_path:
+				return {"success":False, "message":"Dosya bulunamadı."}
+		
+		download_url = f"https://api.telegram.org/file/bot{self.token}/{file_path}"
+		r = requests.get(download_url, allow_redirects=True)
+		print(download_url)
+		downloaded_path = os.path.join(self.data_folder,filename)
+		open(downloaded_path, 'wb').write(r.content)
+		return {"success":True, "message":downloaded_path}
+
+	# dont call from outside
+	def file_exists(self, file_name):
+		return file_name in os.listdir(self.data_folder)
+
+	def manage_download(self, document):
+		file_id = document.file_id
+		file_name = document.file_name
+		response = {"message":'', 'success':False}
+
+		file_path = self.get_file_path(file_id)
+		download_result = self.download_file(file_name, file_path=file_path)
+		if download_result:
+			return {"success":True, "message":download_result['message']}
+
+
+class DriveAPI:
+	SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/spreadsheets']
+	def __init__(self):
+		self.main_dir = os.path.join(os.getcwd(), "telegram_bot")
+		self.folders_file = "/var/www/itshasanaslan/telegram_bot/GoogleDriveAPI"
+		self.folder_info_json_path =os.path.join(self.main_dir, os.path.join(self.folders_file, 'folder_info.json'))
+		self.credentials_json_path = os.path.join(self.main_dir, os.path.join(self.folders_file, 'credentials.json'))
+		self.creds = None
+		self.service = None
+		self.initialize()
+		self.folders_and_ids = {}
+		self.load_files()
+
+	def initialize(self):
+		pickle_path = os.path.join(self.folders_file, 'token.pickle')
+		if os.path.exists(pickle_path):
+			with open(pickle_path, 'rb') as token:
+				self.creds = pickle.load(token)
+		# If there are no (valid) credentials available, let the user log in.
+		if not self.creds or not self.creds.valid:
+			if self.creds and self.creds.expired and self.creds.refresh_token:
+				self.creds.refresh(Request())
+			else:
+				flow = InstalledAppFlow.from_client_secrets_file(
+					self.credentials_json_path, DriveAPI.SCOPES)
+				self.creds = flow.run_local_server(port=0)
+			# Save the credentials for the next run
+			with open(pickle_path, 'wb') as token:
+				pickle.dump(self.creds, token)
+
+		self.service = build('drive', 'v3', credentials=self.creds)
+
+	#drive sample code.
+	def get_files(self):
+		# Call the Drive v3 API
+		results = self.service.files().list( fields="nextPageToken, files(id, name)").execute()
+		items = results.get('files', [])
+
+		if not items:
+			print('No files found.')
+		else:
+			print('Files:')
+			for item in items:
+				print(u'{0} ({1})'.format(item['name'], item['id']))
+
+	def get_all_folders(self):
+		page_token = None
+		found = False
+		while not found:
+			response = self.service.files().list(q="mimeType = 'application/vnd.google-apps.folder'",
+												spaces='drive',
+												fields='nextPageToken, files(id, name)',
+												pageToken=page_token).execute()
+			for file in response.get('files', []):
+				# Process change
+				#print('Found file: %s id: (%s)' % (file.get('name'), file.get('id')))
+				if file.get('id') == self.folders_and_ids['KPSS']:
+					print("Found:", file.get('name'))
+					found  = True
+					return file
+			page_token = response.get('nextPageToken', None)
+			if page_token is None:
+				break
+
+	def get_folder_content(self, id):
+		id = self.folders_and_ids.get(id)
+		if not id:return None
+
+		query = f"parents = '{id}'"
+		response = self.service.files().list(q = query).execute()
+		files = response.get('files')
+		nextPageToken = response.get('nextPageToken')
+
+		while nextPageToken:
+			response = self.service.files().list(q = query).execute()
+			files.extend(response.get('files'))
+			nextPageToken = response.get('nextPageToken')
+		return files
+
+	def load_files(self):
+		with open(self.folder_info_json_path, 'r', encoding='utf-8') as file:
+			data = json.loads(file.read())
+		
+		self.folders_and_ids = data
+
+	def get_recorded_folders_str(self):
+		x = ""
+		for i,j in self.folders_and_ids.items():
+			x += i + ", "
+		
+		return x
+
+	def FileUpload(self,filepath, to_folder): 
+		print("filepath:",filepath)
+		if to_folder not in self.folders_and_ids:
+			print(to_folder, "does not exists")
+			return {"success":False, "message":"Bu isimde bir klasör kaydı yok. Kayıtlı klasörler:" + self.get_recorded_folders_str()}
+		folder_id = self.folders_and_ids[to_folder]
+		# Extract the file name out of the file path 
+		#name = filepath.split('/')[-1] 
+		name = filepath.split('/')[-1] 
+		print("name", name)
+		if self.file_exists(name, to_folder):
+			return {"success":False, "message":f"{name} isminde bir dosya zaten yüklenmiş. Dosyanın adını değiştirin."}
+		# Find the MimeType of the file 
+		mimetype = MimeTypes().guess_type(name)[0] 
+		  
+		# create file metadata 
+		file_metadata = {'name': name,
+		"parents": [folder_id]} 
+	
+		
+  
+		try: 
+			media = MediaFileUpload(filepath, mimetype=mimetype) 
+				
+			# Create a new file in the Drive storage 
+			file = self.service.files().create( 
+				body=file_metadata, media_body=media, fields='id').execute() 
+				
+			return {
+				"success": True,
+				"message" :f"'{name}' dosyası,  '{to_folder}' klasörüne başarıyla yüklendi."
+			} 
+			
+		except Exception as error:
+				
+			# Raise UploadError if file is not uploaded. 
+			return {
+				'success':False,
+				'message':"Can't Upload File." + str(error) 
+			}
+
+	def file_exists(self, filename, to_folder):
+		for i in self.get_folder_content(to_folder):
+			if i['name'] == filename:
+				return True
+		return False
+
+	def get_urls(self, folder_id):
+		files = self.get_folder_content(folder_id)
+		if not files:
+			msg =  "Bu isimde bir klasör yok. Mevcut klasörler: "
+			for i,j in self.folders_and_ids.items():
+				msg += i + "\n"
+			return msg
+		
+		msg = ""
+		enumerator = 1
+		for i in files:
+			link = f"https://drive.google.com/file/d/{i.get('id')}/view?usp=sharing"
+			name = i.get('name')
+			msg += f"{str(enumerator)}) {name} {link}\n"
+			enumerator += 1
+		return msg
+
+
+
+class QuizHandler:
+	def __init__(self):
+		self.telegram_data_folder = "/var/www/itshasanaslan/telegram_bot/telegram_data"
+		self.quiz_senders_file  =  os.path.join(self.telegram_data_folder, "quiz_users.db")
+		self.quiz_senders_info = {} # "id": [name,SentNumber]
+		self.database_connection = None
+
+		self.read_data()
+
+	def increase(self, user):
+		d = ""
+		is_updating = True
+		if user.id not in self.quiz_senders_info:
+			is_updating =  False
+			if user.username:
+				d += "@" + user.username + " "
+			if user.first_name:
+				d += user.first_name + " "
+			if user.last_name:
+				d += user.last_name
+			
+			self.quiz_senders_info[user.id] = [d, 0]
+		
+		self.quiz_senders_info[user.id][1] += 1
+		score = self.quiz_senders_info[user.id][1]
+		
+		
+		self.save_data(user, d, score, is_updating)
+
+		print(d, " sent a poll.")
+
+		if self.quiz_senders_info[user.id][1] % 10 == 0:
+			return self.alert(user)
+		else:
+			return None
+
+	def alert(self, user):
+		msg = f"{self.quiz_senders_info.get(user.id)[0]} {str(self.quiz_senders_info.get(user.id)[1])}. sorusunu gönderdi!\n\nMEVCUT SIRALAMA\n\n"
+		max_sender = ""
+		sender_count = 0
+		data = sorted(self.quiz_senders_info.items(), key=lambda x: x[1], reverse=True)
+		s = 1 
+		for i in data:
+			name = i[1][0]
+			score = i[1][1]
+			if score > sender_count:
+				sender_count = score
+				max_sender = name
+			msg += f"{name} : {score} soru\n"
+			s += 1
+
+		msg += f"\n\n\nEn çok katkıda bulunan '{name}' kişisine teşekkürler :)"
+		return msg
+
+		
+	def save_data(self, data, d, score, is_updating):
+		cursor = self.database_connection.cursor()
+		values = None
+		if not is_updating:
+			print("New quiz user.")
+			parameters = f"""insert into Users (username,user_id,score) values(?,?,?);"""
+			values  = (d, data.id, score )
+		else:
+			print("Updating quiz user")
+			parameters = f"""UPDATE Users set score = '{score}' where user_id = '{data.id}'"""
+			
+
+		try:
+			if not is_updating:
+				cursor.execute(parameters, values)
+			else:
+				cursor.execute(parameters)
+			self.database_connection.commit()
+			cursor.close()
+			print("done")
+		except Exception as f:
+			print("Sql error:", f)
+	
+	def read_data(self):
+		self.database_connection = sqlite3.connect(self.quiz_senders_file, check_same_thread=False)
+		cursor = self.database_connection.cursor()
+		values = cursor.execute("Select * from Users").fetchall()
+		for i in values:
+			self.quiz_senders_info[i[2]] = [i[1], i[3]]
+		
+		print(self.quiz_senders_info)
+		cursor.close()
+
+
+
+class User:
+	def __init__(self):
+		self.username = "@itshasanaslan"
+		self.first_name = "Hasan"
+		self.last_name = "Aslan"
+		self.id = "1151272453"
+
+		

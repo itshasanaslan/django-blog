@@ -1,0 +1,30 @@
+{%extends 'base.html' %}
+
+{%block title%}
+    Edit Profile
+{%endblock%}
+
+
+{%block content%}
+    {% if user.is_authenticated%}
+    {% if user.id == profile.user.id %}
+    <h1>
+        Edit Profile
+    </h1>
+
+    <br><br>
+    <div class="form-control">
+        <form id="form_model" method="POST" enctype="multipart/form-data">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button type="submit" class="btn btn-secondary" id="btn_submit">Update</button>
+        </form>
+    </div>
+  
+    {%else%}
+    <h1 style="color: red;"> You are not allowed here!</h1>
+    {%endif%}
+   
+    {%endif%}
+    <br><br><br><br>
+{%endblock%}

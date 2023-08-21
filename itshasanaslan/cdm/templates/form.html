@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+        <title>ÇDM Attendance</title>
+       <style>
+           #main{
+            position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                        }
+            h1{
+                text-align: center;
+                font-size: 70px;
+              
+                color: red;
+            }
+           </style>
+
+
+
+
+    </head>
+    <body>
+        <h1>ÇDM ATTENDANCE FOR L3</h1>
+       <div id="main">
+        <form id="attendance_form" action="{{cdm_home}}" method="POST">
+            {% csrf_token %}
+            <label for="students" style="font-size: 30px;">Please select your name:</label><br><br>
+           
+
+            <select name="students" id="students">
+              {% for i in students%}
+              <option value={{i.id}}> {{i.full}}</option> 
+                {%endfor%}
+              
+              
+            </select>            
+            <br>
+            <label for="lessons" style="font-size: 30px;">Please select the lesson:</label><br><br>
+
+            <select name="lessons" id="lessons">
+              {% for i in lessons%}
+              <option value={{i.id}}> {{i.date}}</option> 
+                {%endfor%}
+            </select>   
+            
+            <br><label for="lname" style="font-size: 30px;">Please write your excuse:</label><br><br>
+            <textarea id="excuse" name="excuse" rows="4" cols="50"> </textarea><br><br>
+            <br>
+            <br>            <input type="button" value="Submit" class="btn btn btn-primary">
+            
+
+          </form> 
+       </div>
+    </body>
+
+    <script>
+    
+
+        var btn_submit = document.getElementsByClassName("btn btn btn-primary")[0];
+       
+        btn_submit.onclick = function()
+        {
+            var excuse = document.getElementById("excuse");
+            if (excuse.value == " ")
+            {
+                alert("Please give me an excuse :(");
+            }
+           else{
+               btn_submit.type = "submit";
+           }
+        }
+    
+    </script>
+</html>

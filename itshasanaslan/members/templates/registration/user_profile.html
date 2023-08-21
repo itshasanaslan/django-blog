@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Profile {% endblock %}
+
+{% block content %}
+<h1>Profile Page</h1>
+Username: {{page_user}}
+<div class="card mb-3" >
+    <div class="row no-gutters">
+      <div class="col-md-2">
+        {% if page_user.profile_pic.url %}
+        <img src="{{page_user.profile_pic.url}}" width="200" height="200" class="card-img">
+        {% else %}
+        <img src="{%static 'theblog/images/default_profile.png' %}" width="200" height="200" class="card-img">
+        {% endif %}
+      </div>
+      <div class="col-md-10">
+        <div class="card-body">
+          <h5 class="card-title">{{page_user.user.first_name}} {{page_user.user.last_name}}</h5>
+          <p class="small text-muted">
+              {% if page_user.user.profile.facebook_url%}
+              <a href="{{page_user.user.profile.facebook_url}}" style="text-decoration: none;">
+                <img src="{% static 'theblog/images/facebook_icon.ico'%}"  width="25" height="25" class="rounded-circle">
+              </a>  
+            {% endif %}
+            {% if page_user.user.profile.twitter_url%}
+            <a href="{{age_user.user.profile.twitter_url}}" style="text-decoration: none;">
+                <img src="{% static 'theblog/images/twitter_icon.png'%}" width="25" height="25" class="rounded-circle">
+              </a>  
+            {% endif %}
+            {% if page_user.user.profile.instagram_url%}
+            <a href="{{page_user.user.profile.instagram_url}}" style="text-decoration: none;">
+                <img src="{% static 'theblog/images/instagram_icon.png'%}"  width="25" height="25" class="rounded-circle">
+              </a>  
+            {% endif %}
+          </p>
+          <p class="card-text"> {{page_user.user.profile.bio|safe}} </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if page_user_posts%}
+  <hr>
+  <h3>Posts</h3>
+  <br/>
+ 
+  {% for i in page_user_posts%}
+  <li> 
+    {% if i.author.profile%}
+   <a href="{% url 'show_profile_page' i.author.profile.id %}" style="text-decoration: none;">
+        <img src="{{i.author.profile.profile_pic.url}}" width="50" height="50" class="rounded-circle">
+   </a>
+
+  {%else%}
+  <img src="{%static 'theblog/images/default_profile.png' %}" width="50" height="50" class="rounded-circle">
+
+  {%endif%}
+  {%  if i.author.profile%}
+  <i>
+    <a href="{% url 'show_profile_page' i.author.profile.id %}" style="text-decoration: none; color: black;">{{i.author.first_name}} {{i.author.last_name}} </a>
+  </i>
+  {% else %}
+
+   <i>{{i.author.first_name}} {{i.author.last_name}}
+        {% endif %}
+       {% if i.author.is_superuser%}<span style="color: red;">(moderator)</span>
+       {% endif %}
+       - <i>{{i.post_date}}</i></i> - <a href="{% url 'category' i.category|slugify %}"><i style="color:green">[{{i.category}}]</i></a>
+       <br>
+</li>
+   <h3><a href="{% url 'article-detail' i.pk %}" style="text-decoration: none;">{{i.title}}</a></h3> 
+   {{i.body|slice:"200"|safe}}
+   <i><a href="{% url 'article-detail' i.pk %}">...read more...</a></i> <br>
+
+<br>
+<hr>
+{%endfor%}
+{% else %}
+<h3><i> No articles found..</i></h3> 
+ {%endif%}
+
+
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
+
+{% endblock %}

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+
+    <title>itshasanaslan: {%block title%}{%endblock%}</title>
+	<style> 
+	.text-center p-3{
+	background-color:red;	
+}
+</style> 
+    
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="{%url 'home' %}">Itshasanaslan</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  {% if user.is_authenticated%}
+                  <li class="nav-item">
+                    <a class="nav-link" href="{%url 'add_post' %}">Add Post</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{%url 'add_category' %}">Add Category</a>
+                  </li>
+                
+                
+   
+                  
+                  {% endif %}
+             
+
+                  {% if cat_menu %}
+
+                  <!--Category menu code-->
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      {% for item in cat_menu %}
+                      <li><a class="dropdown-item" href="{% url 'category' item|slugify %}">{{item}}</a></li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                  {%  else %}
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'category-list' %}">Categories</a>
+                  </li>
+                {%  endif %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Programs
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{%url 'execute_order_article' %}">Execute Order 66</a></li>
+                  <li><a class="dropdown-item" href="{%url 'vaultafed_article' %}">Vaultafed</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item"href="{%url 'file_encryption_article' %}">File Encryption(Windows)</a></li>
+                </ul>
+              </li>
+            
+            </ul>
+            {% if user.is_authenticated%}
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                 {% if user.first_name and user.last_name%}
+                 {{user.first_name}} {{user.last_name}}
+                 {%else%}
+                 {{user.username}}
+                 {%endif%}
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item"  href="{%url 'edit_profile' %}">Settings</a></li>
+
+                {% if user.profile%}                      
+                  <li><a class="dropdown-item" href="{%url 'edit_profile_page' user.profile.id %}">Edit Profile Page</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{% url 'show_profile_page' user.profile.id %}">Show Profile Page</a></li>
+                  {%else%}
+                  <li><a class="dropdown-item"  href="{%url 'create_profile_page' %}">Create Profile</a></li>
+
+                  {%endif%}
+                  <li><hr class="dropdown-divider"><a class="dropdown-item"  href="{%url 'logout' %}">Log out</a></li>
+                </ul>
+              </li>
+            </ul>
+            {% else %}
+            <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{%url 'register' %}">Register</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{%url 'login' %}">Login</a>
+            </li>
+          </ul>
+            {% endif %}
+            <form class="d-flex">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+        </div>
+      </nav>
+      <div class='container'>
+        {%block content%}
+        {%endblock%}
+    </div>
+    <!-- Optional JavaScript; choose one of the two! -->
+    <br/><br/><br/><br/>
+    <footer class="bg-light text-center text-lg-start">
+     
+      <div class="text-center p-3" style="background-color:black">
+     
+
+        <a href="https://itshasanaslan.com" style="color: white;text-decoration: none;">itshasanaslan.com</a>
+        &nbsp;&nbsp; 
+          <a href="https://twitter.com/itshasanaslan" target="_blank">
+            <img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/twitter-128.png" alt="Twitter Logo" class="rounded-circle" width="25" height="25"></a>
+             &nbsp;&nbsp; 
+            <a href="https://instagram.com/itshasanaslan" target="_blank">
+            <img src="https://i.pinimg.com/originals/71/72/16/7172161b580470deb78078669236d2c1.jpg"  class="rounded-circle" width="25" height="25"></a>
+            &nbsp;&nbsp; 
+
+          <a href="https://www.linkedin.com/in/hasan-aslan-91b2801b3/" target="_blank">
+            <img src="https://nanoteknoloji.org/wp-content/uploads/2018/08/linkedin-icon.png"  class="rounded-circle" width="25" height="25"></a>
+            &nbsp;&nbsp; 
+
+          <a href="https://facebook.com/hasanaslan8" target="_blank">
+            <img src="http://www.iconarchive.com/download/i54037/danleech/simple/facebook.ico"  class="rounded-circle" width="25" height="25"></a>
+  
+      </div>
+      <!-- Copyright -->
+    </footer>
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.6.0/dist/umd/popper.min.js" integrity="sha384-KsvD1yqQ1/1+IA7gi3P0tyJcT3vR+NdBTt13hSJ2lnve8agRGXTTyNaBYmCR/Nwi" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.min.js" integrity="sha384-nsg8ua9HAw1y0W1btsyWgBklPnCUAFLuTMS2G72MMONqmOymq585AcH49TLBQObG" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>
+
+

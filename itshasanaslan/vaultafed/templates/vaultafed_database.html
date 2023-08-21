@@ -1,0 +1,55 @@
+{%extends 'base.html'%}
+
+{%block style_control%}
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 76%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+  
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+ {%endblock%}
+ {% block title%} Vaultafed Web API  {%endblock%}
+{% block content%}
+
+
+
+{% if user.is_superuser%}
+<h2>Vaultafed Users Table</h2>
+
+<table>
+  <tr>
+    <th>Username</th>
+    <th>Pasword</th>
+    <th>Email</th>
+    <th>Name</th>
+    <th>Last Name</th>
+    <th>Ads Disabled</th>
+
+  </tr>
+   {%for i in data%}
+  <tr>
+    <td>{{i.0}}</td>
+    <td>{{i.1}}</td>
+    <td>{{i.2}}</td>
+    <td>{{i.3}}</td>
+    <td>{{i.4}}</td>
+    <td>{{i.5}}</td>
+  </tr>
+  {%endfor%}
+</table>
+
+{%else%}
+<h1 style="color: red;"> You are not allowed here!</h1>
+{%endif%}
+{%endblock%}

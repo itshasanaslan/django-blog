@@ -1,0 +1,50 @@
+{%extends 'base.html' %}
+
+{%block title%}
+    Add Post
+{%endblock%}
+
+
+{%block content%}
+    {% if user.is_authenticated%}
+
+    <h1>
+        Add Blog Post
+    </h1>
+
+    <br><br>
+    <div class="form-control">
+        <form id="form_model" method="POST" enctype="multipart/form-data">
+            {%csrf_token%}
+            {{form.media}}
+            {{form.as_p}}
+            <button type="button" class="btn btn-secondary" id="btn_submit">Post</button>
+        </form>
+    </div>
+    <script>
+        var name = "{{ user.id }}";
+        document.getElementById("user_id").value = name;
+
+
+        var btn_submit = document.getElementById("btn_submit");
+       
+        btn_submit.onclick = function()
+        {
+            var user_id = document.getElementById("user_id").value;
+            if (user_id != "{{user.id}}")
+            {
+                alert("You think you can fool me? I'm the IT god. :)");
+                return;
+            }
+           else{
+               btn_submit.type = "submit";
+           }
+        }
+
+    </script>
+    {%else%}
+    <h1 style="color: red;"> You are not allowed here!</h1>
+    {%endif%}
+  
+
+{%endblock%}

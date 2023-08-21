@@ -1,0 +1,76 @@
+{% load static %} 
+<html>
+    <head>
+        <title>Cypher</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+      
+
+        <style>
+            .alert {
+            padding: 20px;
+            background-color: #f44336; /* Red */
+            color: white;
+            margin-bottom: 15px;
+            visibility: hidden;
+            }
+
+            /* The close button */
+            .closebtn {
+            margin-left: 15px;
+            color: white;
+            font-weight: bold;
+            float: right;
+            font-size: 22px;
+            line-height: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            }
+
+            /* When moving the mouse over the close button */
+            .closebtn:hover {
+            color: black;
+        }
+        </style>
+        {% csrf_token %}
+        <script src="{% static 'cypher/cypher_js_code.js' %}"></script>
+        <script type="text/javascript" src="js/bootstrap-filestyle.min.js"> </script>
+    </head>
+    <body>
+        <center>
+            <div class="alert">
+                <span class="closebtn" onclick="this.parentElement.style.visibility'hidden';">&times;</span>
+                This is an alert box.
+              </div>
+        </center>
+
+            <center>
+                <form onsubmit="return false">{% csrf_token %}
+                This app uses <a href="https://cryptography.io/en/latest/">python cryptography module.</a>
+                Generate a key, and save it. Paste the text you want to encrypt & decrypt on the box below. Use 
+                the buttons below to encrypt or decrypt. If you want to decrypt, be sure to paste the key. <a href="{%url 'cypher_source_code' %}">View source code.</a>
+                <br>   
+                <br>
+                <textarea  id="txt_area_text" style="font-size: large;" rows="15" cols="120" placeholder="Write your text here."></textarea><br>
+                <h2>Cypher Key:</h2>
+                <textarea id="txt_area_key" rows="2" cols="60"></textarea>
+                <br><br>  <button id="btn_generate_key"  class="btn btn-warning"     data-csrf="{{ csrf_token }}">Generate Key</button>
+                <br>
+                <span style="color:red">Don't lose your key!</span>
+                <br><br><br>     
+                <button id="btn_encrypt" class="btn btn-primary" data-csrf="{{ csrf_token }}">Encrypt</button>
+                <button id="btn_decrypt" class="btn btn-secondary" data-csrf="{{ csrf_token }}">Decrypt</button>
+                <button id="btn_download" class="btn btn-primary" >Save</button>
+                <input type="button" id="loadFileXml" value="Load" class="btn btn-secondary" onclick="document.getElementById('fileInput').click();" />
+                <input type="file" id="fileInput" style="display:none;" name="file"/>
+                </form>
+
+             
+
+            </center>
+            
+    
+
+
+
+    </body>
+</html>
